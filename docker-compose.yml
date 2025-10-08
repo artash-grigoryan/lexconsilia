@@ -1,0 +1,73 @@
+version: '3'
+
+services:
+  ai-server:
+    image: local-ollama
+    container_name: lexconsilia-ai
+    build:
+      context: .
+      dockerfile: ./docker/ai/llama/Dockerfile
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: lexconsilia-chromadb
+    ports:
+      - '8000:8000'
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=test-token
+      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.token.TokenAuthenticationServerProvider
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  huggingface-embeddings:
+    build:
+      context: ./docker/italian-bert
+      dockerfile: Dockerfile
+    container_name: lexconsilia-italian-bert
+    ports:
+      - '8080:80'
+    volumes:
+      - hf_models:/root/.cache/huggingface
+    environment:
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  mongodb-local:
+    container_name: lexconsilia-mongodb-local
+    build:
+      context: ./docker/mongodb-local
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - '27017:27017'
+    networks:
+      - custom_network
+
+networks:
+  custom_network:
+    name: lexconsilia_network
+    driver: bridge
+
+volumes:
+  ollama:
+    driver: local
+  chromadb_data:
+    driver: local
+  hf_models:
+    driver: local

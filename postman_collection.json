@@ -1,0 +1,244 @@
+{
+  "info": {
+    "name": "LexConsilia RAG API",
+    "description": "Collection Postman pour tester l'API RAG de LexConsilia",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Stats",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rag/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "stats"]
+        },
+        "description": "Récupère les statistiques du système RAG"
+      }
+    },
+    {
+      "name": "Index Text Document - Law",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Article 1134 du Code Civil: Les conventions légalement formées tiennent lieu de loi à ceux qui les ont faites. Elles ne peuvent être révoquées que de leur consentement mutuel, ou pour les causes que la loi autorise. Elles doivent être exécutées de bonne foi.\",\n  \"type\": \"LAW\",\n  \"metadata\": {\n    \"title\": \"Code Civil - Article 1134\",\n    \"source\": \"Code Civil Français\",\n    \"tags\": [\"contrats\", \"obligations\", \"bonne foi\"]\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/index/text",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "index", "text"]
+        },
+        "description": "Indexe un document de type LOI"
+      }
+    },
+    {
+      "name": "Index Text Document - Jurisprudence",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Arrêt Cour de Cassation, Chambre Civile 1, 10 juillet 2013. En matière de responsabilité contractuelle, le créancier doit prouver l'existence du contrat et l'exécution de sa propre obligation. Il incombe au débiteur de prouver la force majeure pour s'exonérer de sa responsabilité.\",\n  \"type\": \"JURISPRUDENCE\",\n  \"metadata\": {\n    \"title\": \"Cass. Civ. 1re, 10 juillet 2013\",\n    \"date\": \"2013-07-10\",\n    \"source\": \"Cour de Cassation\",\n    \"tags\": [\"responsabilité contractuelle\", \"preuve\", \"force majeure\"]\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/index/text",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "index", "text"]
+        },
+        "description": "Indexe une décision de jurisprudence"
+      }
+    },
+    {
+      "name": "Index Text Document - Article",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Le principe de la bonne foi en droit des contrats. La bonne foi est un principe fondamental qui gouverne l'exécution des contrats. Elle impose aux parties un comportement loyal et honnête dans leurs relations contractuelles.\",\n  \"type\": \"ARTICLE\",\n  \"metadata\": {\n    \"title\": \"La bonne foi contractuelle\",\n    \"author\": \"Doctrine juridique\",\n    \"tags\": [\"bonne foi\", \"droit des contrats\", \"loyauté\"]\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/index/text",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "index", "text"]
+        },
+        "description": "Indexe un article juridique"
+      }
+    },
+    {
+      "name": "Index PDF",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": [],
+              "description": "Sélectionnez un fichier PDF"
+            },
+            {
+              "key": "metadata",
+              "value": "{\"title\":\"Document de test\",\"type\":\"JURISPRUDENCE\",\"tags\":[\"test\"]}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/index/pdf",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "index", "pdf"]
+        },
+        "description": "Indexe un fichier PDF"
+      }
+    },
+    {
+      "name": "Index Multiple PDFs",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": [],
+              "description": "Sélectionnez plusieurs fichiers PDF"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/index/pdfs",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "index", "pdfs"]
+        },
+        "description": "Indexe plusieurs fichiers PDF en une seule requête"
+      }
+    },
+    {
+      "name": "Query - Question",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"Quelles sont les règles concernant l'exécution des contrats?\",\n  \"type\": \"QUESTION\",\n  \"maxResults\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/query",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "query"]
+        },
+        "description": "Pose une question au système RAG"
+      }
+    },
+    {
+      "name": "Query - Summary",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"Résume les principes de la bonne foi en droit des contrats\",\n  \"type\": \"SUMMARY\",\n  \"maxResults\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/query",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "query"]
+        },
+        "description": "Demande un résumé sur un sujet"
+      }
+    },
+    {
+      "name": "Query - Analysis",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"Analyse les conditions de la responsabilité contractuelle\",\n  \"type\": \"ANALYSIS\",\n  \"maxResults\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/query",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "query"]
+        },
+        "description": "Demande une analyse juridique approfondie"
+      }
+    },
+    {
+      "name": "Analyze PDF",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": [],
+              "description": "Sélectionnez un fichier PDF à analyser"
+            },
+            {
+              "key": "query",
+              "value": "Fournis un résumé détaillé de ce document",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rag/analyze/pdf",
+          "host": ["{{baseUrl}}"],
+          "path": ["rag", "analyze", "pdf"]
+        },
+        "description": "Analyse un PDF sans l'indexer"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
+

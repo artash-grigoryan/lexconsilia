@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  ai-server:
+    image: local-ollama
+    container_name: ai-server
+    build:
+      context: .
+      dockerfile: ./docker/ai/llama/Dockerfile
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: lexconsilia-chromadb
+    ports:
+      - '8000:8000'
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  mongodb-local:
+    container_name: tulute-mongodb-local
+    build:
+      context: ./docker/mongodb-local
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - '27017:27017'
+    networks:
+      - custom_network
+
+networks:
+  custom_network:
+    name: lexconsilia_network
+    driver: bridge
+
+volumes:
+  ollama:
+    driver: local
+  chromadb_data:
+    driver: local
