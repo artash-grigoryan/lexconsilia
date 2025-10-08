@@ -32,6 +32,7 @@ services:
       - custom_network
 
   huggingface-embeddings:
+    mem_limit: 8g
     build:
       context: ./docker/italian-bert
       dockerfile: Dockerfile

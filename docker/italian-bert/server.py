@@ -76,41 +76,37 @@ async def health():
 
 @app.post("/embed")
 async def embed(request: EmbedRequest) -> List[List[float]]:
-    """Génère des embeddings pour du texte"""
-    
     if model is None or tokenizer is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
+
+    texts = [request.inputs] if isinstance(request.inputs, str) else request.inputs
+    logger.info(f"🇮🇹 Generating embeddings for {len(texts)} text(s)")
+
     try:
-        # Convertir en liste si string unique
-        texts = [request.inputs] if isinstance(request.inputs, str) else request.inputs
-        
-        logger.info(f"🇮🇹 Generating embeddings for {len(texts)} text(s)")
-        
-        # Tokenize
-        encoded_input = tokenizer(
-            texts,
-            padding=True,
-            truncation=True,
-            max_length=512,
-            return_tensors='pt'
-        )
-        
-        # Générer embeddings
-        with torch.no_grad():
-            model_output = model(**encoded_input)
-        
-        # Pool et normaliser
-        embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
-        embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-        
-        # Convertir en liste
-        embeddings_list = embeddings.tolist()
-        
-        logger.info(f"✅ Generated {len(embeddings_list)} embeddings")
-        
-        return embeddings_list
-        
+        BATCH_SIZE = 16
+        device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        all_embeddings = []
+
+        for i in range(0, len(texts), BATCH_SIZE):
+            batch = texts[i:i + BATCH_SIZE]
+            encoded_input = tokenizer(
+                batch,
+                padding=True,
+                truncation=True,
+                max_length=512,
+                return_tensors='pt'
+            ).to(device)
+
+            with torch.no_grad():
+                model_output = model(**encoded_input)
+
+            embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+            embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+            all_embeddings.extend(embeddings.cpu().tolist())
+
+        logger.info(f"✅ Generated {len(all_embeddings)} embeddings")
+        return all_embeddings
+
     except Exception as e:
         logger.error(f"❌ Error generating embeddings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
