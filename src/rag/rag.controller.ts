@@ -19,8 +19,8 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { RagService } from './services/rag.service';
 import { IndexDocumentDto } from './dto/IndexDocumentDto';
 import { QueryDto } from './dto/QueryDto';
-import { IQueryResponse } from '../interfaces/IQueryResponse';
-import { IIndexResponse } from '../interfaces/IIndexResponse';
+import { IQueryResponse } from '../interfaces/query-response.model';
+import { IIndexResponse } from '../interfaces/index-response.model';
 
 @ApiTags('rag')
 @Controller('rag')
@@ -30,14 +30,14 @@ export class RagController {
   @Post('index/text')
   @ApiTags('indexation')
   @ApiOperation({
-    summary: 'Indexer un document texte',
+    summary: 'Index a text document',
     description:
-      'Indexe un document juridique dans la base vectorielle. ' +
-      'Le système détecte automatiquement les doublons et découpe le document en chunks.',
+      'Indexes a legal document in the vector database. ' +
+      'The system automatically detects duplicates and splits the document into chunks.',
   })
   @ApiResponse({
     status: 201,
-    description: 'Document indexé avec succès',
+    description: 'Document successfully indexed',
     schema: {
       example: {
         success: true,
@@ -49,7 +49,7 @@ export class RagController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Données invalides',
+    description: 'Invalid data',
   })
   async indexTextDocument(
     @Body() indexDocumentDto: IndexDocumentDto,
@@ -64,10 +64,10 @@ export class RagController {
   @Post('index/pdf')
   @ApiTags('indexation')
   @ApiOperation({
-    summary: 'Indexer un fichier PDF',
+    summary: 'Index a PDF file',
     description:
-      'Indexe un document PDF juridique. Le texte est extrait automatiquement ' +
-      'et le document est découpé en chunks pour une meilleure recherche.',
+      'Indexes a legal PDF document. The text is automatically extracted ' +
+      'and the document is split into chunks for better search.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -77,12 +77,12 @@ export class RagController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Fichier PDF à indexer',
+          description: 'PDF file to index',
         },
         metadata: {
           type: 'string',
-          description: 'Métadonnées au format JSON',
-          example: '{"title":"Décision de justice","type":"JURISPRUDENCE"}',
+          description: 'Metadata in JSON format',
+          example: '{"title":"Court Decision","type":"JURISPRUDENCE"}',
         },
       },
       required: ['file'],
@@ -90,11 +90,11 @@ export class RagController {
   })
   @ApiResponse({
     status: 201,
-    description: 'PDF indexé avec succès',
+    description: 'PDF successfully indexed',
   })
   @ApiResponse({
     status: 400,
-    description: 'Fichier invalide ou manquant',
+    description: 'Invalid or missing file',
   })
   @UseInterceptors(FileInterceptor('file'))
   async indexPDF(
@@ -102,11 +102,11 @@ export class RagController {
     @Body('metadata') metadataString?: string,
   ): Promise<IIndexResponse> {
     if (!file) {
-      throw new BadRequestException('Aucun fichier fourni');
+      throw new BadRequestException('No file provided');
     }
 
     if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Le fichier doit être un PDF');
+      throw new BadRequestException('The file must be a PDF');
     }
 
     const metadata = metadataString ? JSON.parse(metadataString) : undefined;
@@ -117,9 +117,9 @@ export class RagController {
   @Post('index/pdfs')
   @ApiTags('indexation')
   @ApiOperation({
-    summary: 'Indexer plusieurs PDFs',
+    summary: 'Index multiple PDFs',
     description:
-      'Indexe plusieurs fichiers PDF en une seule requête (maximum 10 fichiers).',
+      'Indexes multiple PDF files in a single request (maximum 10 files).',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -132,7 +132,7 @@ export class RagController {
             type: 'string',
             format: 'binary',
           },
-          description: 'Fichiers PDF à indexer (max 10)',
+          description: 'PDF files to index (max 10)',
         },
       },
       required: ['files'],
@@ -140,18 +140,18 @@ export class RagController {
   })
   @ApiResponse({
     status: 201,
-    description: 'PDFs indexés avec succès',
+    description: 'PDFs successfully indexed',
   })
   @ApiResponse({
     status: 400,
-    description: 'Fichiers invalides ou manquants',
+    description: 'Invalid or missing files',
   })
   @UseInterceptors(FilesInterceptor('files', 10))
   async indexMultiplePDFs(
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<IIndexResponse> {
     if (!files || files.length === 0) {
-      throw new BadRequestException('Aucun fichier fourni');
+      throw new BadRequestException('No file provided');
     }
 
     const results: IIndexResponse = {
@@ -165,7 +165,7 @@ export class RagController {
     for (const file of files) {
       if (file.mimetype !== 'application/pdf') {
         if (results.errors) {
-          results.errors.push(`${file.originalname} n'est pas un PDF`);
+          results.errors.push(`${file.originalname} is not a PDF`);
         }
         continue;
       }
@@ -192,23 +192,24 @@ export class RagController {
   @Post('query')
   @ApiTags('consultation')
   @ApiOperation({
-    summary: 'Consulter le système RAG',
+    summary: 'Query the RAG system',
     description:
-      'Pose une question au système RAG. Le système recherche les documents ' +
-      "pertinents dans la base vectorielle et génère une réponse avec l'IA.",
+      'Ask a question to the RAG system. The system searches for relevant documents ' +
+      'in the vector database and generates an answer with AI.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Réponse générée avec succès',
+    description: 'Answer successfully generated',
     schema: {
       example: {
         answer:
-          "Les conditions de validité d'un contrat sont définies par l'article 1128 du Code Civil...",
+          'The conditions for the validity of a contract are defined by Article 1128 of the Civil Code...',
         sources: [
           {
             documentId: 'doc_123_abc',
-            title: 'Code Civil - Article 1128',
-            excerpt: "Sont nécessaires à la validité d'un contrat...",
+            title: 'Civil Code - Article 1128',
+            excerpt:
+              'The following are necessary for the validity of a contract...',
             similarity: 0.95,
           },
         ],
@@ -217,7 +218,7 @@ export class RagController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Requête invalide',
+    description: 'Invalid request',
   })
   async query(@Body() queryDto: QueryDto): Promise<IQueryResponse> {
     return await this.ragService.query({
@@ -231,10 +232,10 @@ export class RagController {
   @Post('analyze/pdf')
   @ApiTags('consultation')
   @ApiOperation({
-    summary: 'Analyser un PDF sans indexation',
+    summary: 'Analyze a PDF without indexing',
     description:
-      "Analyse un document PDF à la volée sans l'indexer dans la base. " +
-      'Utile pour obtenir un résumé ou poser une question sur un document ponctuel.',
+      'Analyzes a PDF document on the fly without indexing it in the database. ' +
+      'Useful for getting a summary or asking a question about a one-off document.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -244,12 +245,12 @@ export class RagController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Fichier PDF à analyser',
+          description: 'PDF file to analyze',
         },
         query: {
           type: 'string',
-          description: 'Question optionnelle sur le document',
-          example: 'Résume les points clés de cette décision de justice',
+          description: 'Optional question about the document',
+          example: 'Summarize the key points of this court decision',
         },
       },
       required: ['file'],
@@ -257,11 +258,11 @@ export class RagController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Analyse générée avec succès',
+    description: 'Analysis successfully generated',
   })
   @ApiResponse({
     status: 400,
-    description: 'Fichier invalide ou manquant',
+    description: 'Invalid or missing file',
   })
   @UseInterceptors(FileInterceptor('file'))
   async analyzePDF(
@@ -269,11 +270,11 @@ export class RagController {
     @Body('query') query?: string,
   ): Promise<IQueryResponse> {
     if (!file) {
-      throw new BadRequestException('Aucun fichier fourni');
+      throw new BadRequestException('No file provided');
     }
 
     if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Le fichier doit être un PDF');
+      throw new BadRequestException('The file must be a PDF');
     }
 
     return await this.ragService.analyzeDocument(file.buffer, query);
@@ -281,13 +282,13 @@ export class RagController {
 
   @Get('stats')
   @ApiOperation({
-    summary: 'Statistiques du système',
+    summary: 'System statistics',
     description:
-      'Récupère les statistiques de la base vectorielle (nombre de documents, etc.)',
+      'Retrieves statistics from the vector database (number of documents, etc.)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Statistiques récupérées avec succès',
+    description: 'Statistics successfully retrieved',
     schema: {
       example: {
         collectionName: 'legal_documents',

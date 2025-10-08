@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ChromaDBService } from './chromadb.service';
 import { OllamaService } from './ollama.service';
 import { DocumentProcessorService } from './document-processor.service';
-import { IDocumentMetadata } from '../../interfaces/IDocument';
-import { IQueryRequest } from '../../interfaces/IQueryRequest';
-import { IQueryResponse, ISource } from '../../interfaces/IQueryResponse';
-import { IIndexResponse } from '../../interfaces/IIndexResponse';
-import { DocumentType } from '../../constants/DocumentType.enum';
+import { IDocumentMetadata } from '../../interfaces/document.model';
+import { IQueryRequest } from '../../interfaces/query-request.model';
+import { IQueryResponse, ISource } from '../../interfaces/query-response.model';
+import { IIndexResponse } from '../../interfaces/index-response.model';
+import { DocumentTypesEnum } from '../../constants/document-types.enum';
 
 @Injectable()
 export class RagService {
@@ -20,7 +20,7 @@ export class RagService {
 
   async indexDocument(
     content: string,
-    type: DocumentType,
+    type: DocumentTypesEnum,
     metadata?: IDocumentMetadata,
   ): Promise<IIndexResponse> {
     try {
@@ -121,7 +121,7 @@ export class RagService {
   async indexMultipleDocuments(
     documents: Array<{
       content: string;
-      type: DocumentType;
+      type: DocumentTypesEnum;
       metadata?: IDocumentMetadata;
     }>,
   ): Promise<IIndexResponse> {
@@ -166,7 +166,7 @@ export class RagService {
         maxResults,
       );
 
-      if (!retrievalResults.ids[0] || retrievalResults.ids[0].length === 0) {
+      if (!retrievalResults.ids?.length) {
         return {
           answer:
             'I did not find any relevant documents to answer your question.',
@@ -216,7 +216,7 @@ export class RagService {
       const answer = await this.ollamaService.generateResponse(
         defaultQuery,
         context.substring(0, 10000), // Limit context size
-        query ? this.inferQueryType(query) : ('SUMMARY' as any),
+        query ? this.inferQueryTypesEnum(query) : ('SUMMARY' as any),
       );
 
       return {
@@ -286,7 +286,7 @@ export class RagService {
     }));
   }
 
-  private inferQueryType(query: string): any {
+  private inferQueryTypesEnum(query: string): any {
     const lowerQuery = query.toLowerCase();
 
     if (

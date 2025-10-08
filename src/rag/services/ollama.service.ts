@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GenerateResponse, Ollama } from 'ollama';
-import { QueryType } from '../../constants/QueryType.enum';
+import { QueryTypesEnum } from '../../constants/query-types.enum';
+import { LegalQueryPrompt } from '../../constants/legal-query.prompt';
 
 @Injectable()
 export class OllamaService {
@@ -14,6 +15,7 @@ export class OllamaService {
       // Timeout long pour génération sur CPU (5 minutes)
       fetch: globalThis.fetch,
     });
+
     this.logger.log(`OllamaService initialized with model: ${this.model}`);
     this.logger.log(`⚠️  Note: Responses may take 30-120s on CPU`);
   }
@@ -21,14 +23,18 @@ export class OllamaService {
   async generateResponse(
     query: string,
     context: string,
-    queryType: QueryType,
+    QueryTypesEnum: QueryTypesEnum,
   ): Promise<string> {
     try {
       // Limiter le contexte pour éviter de dépasser la limite du modèle (4096 tokens)
       const truncatedContext = this.truncateContext(context, 2500); // ~1875 tokens
-      const prompt = this.buildPrompt(query, truncatedContext, queryType);
+      const prompt = LegalQueryPrompt.buildPrompt(
+        query,
+        truncatedContext,
+        QueryTypesEnum,
+      );
 
-      this.logger.log(`Generating response for query type: ${queryType}`);
+      this.logger.log(`Generating response for query type: ${QueryTypesEnum}`);
       this.logger.log(
         `Context: ${context.length} chars → ${truncatedContext.length} chars (optimized for 4096 ctx)`,
       );
@@ -61,13 +67,17 @@ export class OllamaService {
   async generateStreamResponse(
     query: string,
     context: string,
-    queryType: QueryType,
+    QueryTypesEnum: QueryTypesEnum,
   ): Promise<AsyncIterable<any>> {
     try {
-      const prompt = this.buildPrompt(query, context, queryType);
+      const prompt = LegalQueryPrompt.buildPrompt(
+        query,
+        context,
+        QueryTypesEnum,
+      );
 
       this.logger.log(
-        `Generating stream response for query type: ${queryType}`,
+        `Generating stream response for query type: ${QueryTypesEnum}`,
       );
 
       const response = await this.ollama.generate({
@@ -83,42 +93,6 @@ export class OllamaService {
         error,
       );
       throw error;
-    }
-  }
-
-  private buildPrompt(
-    query: string,
-    context: string,
-    queryType: QueryType,
-  ): string {
-    const systemPrompt = this.getSystemPrompt(queryType);
-
-    return `${systemPrompt}
-
-Relevant legal context:
-${context}
-
-Question/Request:
-${query}
-
-Answer:`;
-  }
-
-  private getSystemPrompt(queryType: QueryType): string {
-    const basePrompt = `Sei un assistente legale esperto, specializzato in diritto. Devi fornire risposte precise e professionali basate esclusivamente sul contesto fornito.`;
-
-    switch (queryType) {
-      case QueryType.SUMMARY:
-        return `${basePrompt} Il tuo compito è fornire un riassunto chiaro e conciso del documento fornito, evidenziando i punti chiave e le informazioni giuridiche importanti.`;
-
-      case QueryType.QUESTION:
-        return `${basePrompt} Il tuo compito è rispondere alla domanda posta basandoti esclusivamente sul contesto fornito. Se l'informazione non è presente nel contesto, indicalo chiaramente.`;
-
-      case QueryType.ANALYSIS:
-        return `${basePrompt} Il tuo compito è fornire un'analisi giuridica dettagliata del caso o del documento, identificando i punti di diritto applicabili, i precedenti rilevanti e le implicazioni giuridiche.`;
-
-      default:
-        return basePrompt;
     }
   }
 

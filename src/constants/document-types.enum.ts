@@ -1,4 +1,4 @@
-export enum DocumentType {
+export enum DocumentTypesEnum {
   LAW = 'LAW',
   JURISPRUDENCE = 'JURISPRUDENCE',
   ARTICLE = 'ARTICLE',

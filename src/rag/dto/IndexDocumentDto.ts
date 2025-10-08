@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsString, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DocumentType } from '../../constants/DocumentType.enum';
+import { DocumentTypesEnum } from '../../constants/document-types.enum';
 
 export class IndexDocumentDto {
   @ApiProperty({
@@ -13,11 +13,11 @@ export class IndexDocumentDto {
 
   @ApiProperty({
     description: 'Type de document juridique',
-    enum: DocumentType,
-    example: DocumentType.LAW,
+    enum: DocumentTypesEnum,
+    example: DocumentTypesEnum.LAW,
   })
-  @IsEnum(DocumentType)
-  type: DocumentType;
+  @IsEnum(DocumentTypesEnum)
+  type: DocumentTypesEnum;
 
   @ApiPropertyOptional({
     description: 'Métadonnées du document',

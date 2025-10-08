@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ChromaClient, Collection } from 'chromadb';
-import { IDocument } from '../../interfaces/IDocument';
+import { IDocument } from '../../interfaces/document.model';
 import { ItalianEmbeddingsService } from './italian-embeddings.service';
 
 @Injectable()

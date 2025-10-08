@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import pdfParse from 'pdf-parse';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { IDocument, IDocumentMetadata } from '../../interfaces/IDocument';
-import { DocumentType } from '../../constants/DocumentType.enum';
+import { IDocument, IDocumentMetadata } from '../../interfaces/document.model';
+import { DocumentTypesEnum } from '../../constants/document-types.enum';
 
 @Injectable()
 export class DocumentProcessorService {
@@ -47,7 +47,7 @@ export class DocumentProcessorService {
       const document: IDocument = {
         id: this.generateId(),
         content: content,
-        type: DocumentType.PDF,
+        type: DocumentTypesEnum.PDF,
         metadata: {
           ...metadata,
           title: metadata?.title || pdfData.info?.Title || 'Untitled PDF',
@@ -68,7 +68,7 @@ export class DocumentProcessorService {
 
   processText(
     text: string,
-    type: DocumentType,
+    type: DocumentTypesEnum,
     metadata?: IDocumentMetadata,
   ): IDocument {
     try {

@@ -1,9 +1,9 @@
-import { DocumentType } from '../constants/DocumentType.enum';
+import { DocumentTypesEnum } from '../constants/document-types.enum';
 
 export interface IDocument {
   id: string;
   content: string;
-  type: DocumentType;
+  type: DocumentTypesEnum;
   metadata: IDocumentMetadata;
   hash: string;
   createdAt: Date;

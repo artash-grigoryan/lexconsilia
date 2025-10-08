@@ -7,7 +7,7 @@ import {
   Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { QueryType } from '../../constants/QueryType.enum';
+import { QueryTypesEnum } from '../../constants/query-types.enum';
 
 export class QueryDto {
   @ApiProperty({
@@ -19,11 +19,11 @@ export class QueryDto {
 
   @ApiProperty({
     description: 'Type de requête',
-    enum: QueryType,
-    example: QueryType.QUESTION,
+    enum: QueryTypesEnum,
+    example: QueryTypesEnum.QUESTION,
   })
-  @IsEnum(QueryType)
-  type: QueryType;
+  @IsEnum(QueryTypesEnum)
+  type: QueryTypesEnum;
 
   @ApiPropertyOptional({
     description: 'Contexte additionnel pour la requête',

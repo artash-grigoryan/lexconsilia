@@ -88,7 +88,7 @@ curl -X POST http://localhost:3000/rag/query \
 
 ```
 src/
-├── constants/          # Enums (DocumentType, QueryType)
+├── constants/          # Enums (DocumentTypesEnum, QueryTypesEnum)
 ├── interfaces/         # Interfaces TypeScript
 ├── rag/
 │   ├── dto/           # Data Transfer Objects

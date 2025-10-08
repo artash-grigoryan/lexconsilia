@@ -1,8 +1,8 @@
-import { QueryType } from '../constants/QueryType.enum';
+import { QueryTypesEnum } from '../constants/query-types.enum';
 
 export interface IQueryRequest {
   query: string;
-  type: QueryType;
+  type: QueryTypesEnum;
   context?: string;
   maxResults?: number;
 }
