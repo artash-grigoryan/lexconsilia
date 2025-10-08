@@ -18,18 +18,18 @@ export class ChromaDBService implements OnModuleInit {
         path: process.env.CHROMADB_URL || 'http://localhost:8000',
       });
 
-      // Get or create collection avec embeddings par défaut (384 dimensions)
+      // Get or create collection avec embeddings Italian-Legal-BERT (768 dimensions)
       this.collection = await this.client.getOrCreateCollection({
         name: this.collectionName,
         metadata: {
           description:
-            'Italian legal documents with default embeddings (384 dimensions)',
+            'Italian legal documents with Italian-Legal-BERT embeddings (768 dimensions)',
           'hnsw:space': 'cosine',
         },
       });
 
       this.logger.log(
-        `ChromaDB collection "${this.collectionName}" initialized successfully`,
+        `🇮🇹 ChromaDB collection "${this.collectionName}" initialized with Italian-Legal-BERT (768 dims)`,
       );
     } catch (error) {
       this.logger.error('Failed to initialize ChromaDB', error);
@@ -51,19 +51,35 @@ export class ChromaDBService implements OnModuleInit {
       }));
       const documents_content = documents.map((doc) => doc.content);
 
-      // ChromaDB génère automatiquement les embeddings par défaut (384 dimensions)
+      // Générer les embeddings avec Italian-Legal-BERT (768 dimensions)
       this.logger.log(
-        `📝 Adding ${documents_content.length} documents (ChromaDB will generate default 384-dim embeddings)`,
+        `🇮🇹 Generating Italian-Legal-BERT embeddings for ${documents_content.length} documents...`,
       );
 
+      const generatedEmbeddings =
+        await this.italianEmbeddings.generateEmbeddings(documents_content);
+
+      if (!generatedEmbeddings) {
+        throw new Error(
+          'Italian-Legal-BERT service unavailable. Please check Docker container: lexconsilia-italian-bert',
+        );
+      }
+
+      this.logger.log(
+        `✅ Generated ${generatedEmbeddings.length} embeddings (768 dims each)`,
+      );
+
+      // Ajouter avec les embeddings Italian-BERT
       await this.collection.add({
         ids,
         metadatas,
         documents: documents_content,
-        // Pas d'embeddings fournis → ChromaDB les génère automatiquement
+        embeddings: generatedEmbeddings,
       });
 
-      this.logger.log(`Added ${documents.length} documents to ChromaDB`);
+      this.logger.log(
+        `✅ Added ${documents.length} documents to ChromaDB with Italian-Legal-BERT embeddings`,
+      );
       return ids;
     } catch (error) {
       this.logger.error('Failed to add documents to ChromaDB', error);
@@ -73,11 +89,25 @@ export class ChromaDBService implements OnModuleInit {
 
   async queryDocuments(queryText: string, nResults: number = 5): Promise<any> {
     try {
-      // Utiliser les embeddings par défaut de ChromaDB (384 dimensions)
-      this.logger.log(`🔍 Querying with default embeddings (384 dims)...`);
+      // Générer l'embedding de la query avec Italian-Legal-BERT (768 dimensions)
+      this.logger.log(
+        `🇮🇹 Generating Italian-Legal-BERT embedding for query...`,
+      );
+
+      const queryEmbedding =
+        await this.italianEmbeddings.generateEmbedding(queryText);
+
+      if (!queryEmbedding) {
+        throw new Error(
+          'Italian-Legal-BERT service unavailable. Please check Docker container: lexconsilia-italian-bert',
+        );
+      }
+
+      this.logger.log(`✅ Query embedding generated (768 dims)`);
+      this.logger.log(`🔍 Searching in ChromaDB...`);
 
       const results = await this.collection.query({
-        queryTexts: [queryText],
+        queryEmbeddings: [queryEmbedding],
         nResults,
       });
 

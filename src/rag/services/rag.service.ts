@@ -165,8 +165,11 @@ export class RagService {
         request.query,
         maxResults,
       );
-
-      if (!retrievalResults.ids?.length) {
+      console.log(retrievalResults);
+      if (
+        !retrievalResults?.ids?.length ||
+        retrievalResults.ids[0].length === 0
+      ) {
         return {
           answer:
             'I did not find any relevant documents to answer your question.',
@@ -216,7 +219,7 @@ export class RagService {
       const answer = await this.ollamaService.generateResponse(
         defaultQuery,
         context.substring(0, 10000), // Limit context size
-        query ? this.inferQueryTypesEnum(query) : ('SUMMARY' as any),
+        query ? this.inferQueryType(query) : ('SUMMARY' as any),
       );
 
       return {
@@ -286,7 +289,7 @@ export class RagService {
     }));
   }
 
-  private inferQueryTypesEnum(query: string): any {
+  private inferQueryType(query: string): any {
     const lowerQuery = query.toLowerCase();
 
     if (
