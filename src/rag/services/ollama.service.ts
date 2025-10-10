@@ -7,13 +7,19 @@ import { LegalQueryPrompt } from '../../constants/legal-query.prompt';
 export class OllamaService {
   private readonly logger = new Logger(OllamaService.name);
   private ollama: Ollama;
-  private readonly model = 'mistral:7b-instruct-q4_0'; // Version quantifiée, ~4GB au lieu de 10GB
+  private readonly model = 'llama3.2:3b'; // Version quantifiée, ~4GB au lieu de 10GB
 
   constructor() {
     this.ollama = new Ollama({
       host: process.env.OLLAMA_URL || 'http://localhost:11434',
       // Timeout long pour génération sur CPU (5 minutes)
-      fetch: globalThis.fetch,
+      fetch: (url, options) => {
+        return fetch(url, {
+          ...options,
+          // Timeout de 5 minutes (300 secondes)
+          signal: AbortSignal.timeout(300000),
+        });
+      },
     });
 
     this.logger.log(`OllamaService initialized with model: ${this.model}`);
@@ -26,8 +32,10 @@ export class OllamaService {
     QueryTypesEnum: QueryTypesEnum,
   ): Promise<string> {
     try {
+      console.log({ context });
       // Limiter le contexte pour éviter de dépasser la limite du modèle (4096 tokens)
       const truncatedContext = this.truncateContext(context, 2500); // ~1875 tokens
+      console.log({ truncatedContext });
       const prompt = LegalQueryPrompt.buildPrompt(
         query,
         truncatedContext,

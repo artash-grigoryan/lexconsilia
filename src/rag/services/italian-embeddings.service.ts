@@ -57,6 +57,8 @@ export class ItalianEmbeddingsService implements OnModuleInit {
     }
 
     try {
+      // Fetch sans timeout pour embeddings (peut prendre du temps sur CPU)
+      const controller = new AbortController();
       const response = await fetch(`${this.embeddingsUrl}/embed`, {
         method: 'POST',
         headers: {
@@ -65,6 +67,8 @@ export class ItalianEmbeddingsService implements OnModuleInit {
         body: JSON.stringify({
           inputs: text,
         }),
+        signal: controller.signal,
+        // Pas de timeout → illimité pour CPU lent
       });
 
       if (!response.ok) {
@@ -92,6 +96,13 @@ export class ItalianEmbeddingsService implements OnModuleInit {
     }
 
     try {
+      // Fetch sans timeout pour batch embeddings (peut prendre du temps sur CPU)
+      const controller = new AbortController();
+
+      this.logger.log(
+        `⏳ Generating ${texts.length} embeddings with Italian-BERT (no timeout)...`,
+      );
+
       const response = await fetch(`${this.embeddingsUrl}/embed`, {
         method: 'POST',
         headers: {
@@ -100,6 +111,8 @@ export class ItalianEmbeddingsService implements OnModuleInit {
         body: JSON.stringify({
           inputs: texts,
         }),
+        signal: controller.signal,
+        // Pas de timeout → illimité pour CPU lent
       });
 
       if (!response.ok) {
@@ -107,7 +120,9 @@ export class ItalianEmbeddingsService implements OnModuleInit {
       }
 
       const data = (await response.json()) as number[][];
-      this.logger.log(`Generated ${data.length} embeddings with Italian-BERT`);
+      this.logger.log(
+        `✅ Generated ${data.length} embeddings with Italian-BERT`,
+      );
       return data;
     } catch (error) {
       this.logger.error(

@@ -165,7 +165,7 @@ export class RagService {
         request.query,
         maxResults,
       );
-      console.log(retrievalResults);
+
       if (
         !retrievalResults?.ids?.length ||
         retrievalResults.ids[0].length === 0

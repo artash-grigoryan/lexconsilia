@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable validation
+  // Enable global validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -15,25 +15,23 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS
+  // Enable Cross-Origin Resource Sharing (CORS)
   app.enableCors();
 
-  // Swagger configuration
+  // Swagger (OpenAPI) configuration in English
   const config = new DocumentBuilder()
     .setTitle('LexConsilia RAG API')
     .setDescription(
-      'API de Retrieval-Augmented Generation pour documents juridiques. ' +
-        'Indexez des lois, jurisprudences et articles juridiques, puis consultez ' +
-        "votre base de connaissances avec l'IA.",
+      'Retrieval-Augmented Generation API for legal documents. ' +
+        'Index laws, case law, and legal articles, then query your knowledge base with AI.',
     )
     .setVersion('1.0')
-    .addTag('rag', 'Endpoints du système RAG')
-    .addTag('indexation', 'Indexation de documents juridiques')
-    .addTag('consultation', 'Consultation et analyse de documents')
-    .addServer('http://localhost:3000', 'Serveur de développement')
+    .addBearerAuth()
+    .addServer('http://localhost:3000', 'Development server')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'LexConsilia API Documentation',
     customfavIcon: 'https://nestjs.com/img/logo-small.svg',

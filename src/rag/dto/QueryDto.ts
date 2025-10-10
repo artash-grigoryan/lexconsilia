@@ -11,14 +11,14 @@ import { QueryTypesEnum } from '../../constants/query-types.enum';
 
 export class QueryDto {
   @ApiProperty({
-    description: 'Question ou demande à poser au système RAG',
-    example: "Quelles sont les conditions de validité d'un contrat?",
+    description: 'Domanda o richiesta da porre al sistema RAG',
+    example: 'Quali sono le condizioni di validità di un contratto?',
   })
   @IsString()
   query: string;
 
   @ApiProperty({
-    description: 'Type de requête',
+    description: 'Tipo di richiesta',
     enum: QueryTypesEnum,
     example: QueryTypesEnum.QUESTION,
   })
@@ -26,15 +26,7 @@ export class QueryDto {
   type: QueryTypesEnum;
 
   @ApiPropertyOptional({
-    description: 'Contexte additionnel pour la requête',
-    example: 'Dans le cadre du droit commercial français',
-  })
-  @IsOptional()
-  @IsString()
-  context?: string;
-
-  @ApiPropertyOptional({
-    description: 'Nombre maximum de documents à récupérer',
+    description: 'Numero massimo di documenti da recuperare',
     minimum: 1,
     maximum: 20,
     default: 5,

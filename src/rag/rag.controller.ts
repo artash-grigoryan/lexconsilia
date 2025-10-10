@@ -28,7 +28,6 @@ export class RagController {
   constructor(private readonly ragService: RagService) {}
 
   @Post('index/text')
-  @ApiTags('indexation')
   @ApiOperation({
     summary: 'Index a text document',
     description:
@@ -62,7 +61,6 @@ export class RagController {
   }
 
   @Post('index/pdf')
-  @ApiTags('indexation')
   @ApiOperation({
     summary: 'Index a PDF file',
     description:
@@ -115,7 +113,6 @@ export class RagController {
   }
 
   @Post('index/pdfs')
-  @ApiTags('indexation')
   @ApiOperation({
     summary: 'Index multiple PDFs',
     description:
@@ -190,7 +187,6 @@ export class RagController {
   }
 
   @Post('query')
-  @ApiTags('consultation')
   @ApiOperation({
     summary: 'Query the RAG system',
     description:
@@ -224,13 +220,11 @@ export class RagController {
     return await this.ragService.query({
       query: queryDto.query,
       type: queryDto.type,
-      context: queryDto.context,
       maxResults: queryDto.maxResults,
     });
   }
 
   @Post('analyze/pdf')
-  @ApiTags('consultation')
   @ApiOperation({
     summary: 'Analyze a PDF without indexing',
     description:
